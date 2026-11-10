@@ -125,8 +125,11 @@
       <!-- LAB -->
       <section class="lab" id="lab">
         <div class="lab__zone" id="labZone" aria-label="Drag to spin the sneaker">
-          <img src="shots/midnight-0-a.png" alt="" class="fallback fallback--lab" id="labFallback" aria-hidden="true" />
-          <div class="lab__hint mono"><span>Drag to spin</span><span>Double-click to zoom</span></div>
+          <div class="spin" id="spin">
+            <img id="spinImg" src="spin/midnight-00.webp" alt="HX-Runner sneaker, drag to rotate" draggable="false" />
+          </div>
+          <div class="spin__ring" aria-hidden="true"><span id="spinDeg">0&deg;</span></div>
+          <div class="lab__hint mono"><span>Drag to spin 360&deg;</span><span>Double-click to zoom</span></div>
           <div class="lab__zoom">
             <button type="button" id="zoomOut" aria-label="Zoom out">&minus;</button>
             <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
@@ -148,7 +151,12 @@
           </div>
 
           <div class="field">
-            <label class="field__label mono" for="hue">Hue shift <output id="hueOut">0&deg;</output></label>
+            <div class="field__label mono">Quick colors</div>
+            <div class="presets" id="presets"></div>
+          </div>
+
+          <div class="field">
+            <label class="field__label mono" for="hue">Custom hue <output id="hueOut">0&deg;</output></label>
             <input type="range" id="hue" class="range range--hue" min="0" max="360" value="0" />
           </div>
           <div class="field">

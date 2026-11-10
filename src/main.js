@@ -140,11 +140,9 @@ function setupScroll() {
         [aT + aL * 0.78, P.sole],
         [aT + aL, P.sole],
       ];
-      if (desktop) {
-        keys.push([lT, P.lab], [lT + lH - vh, P.lab], [lT + lH, follow(P.lab, vh, { opacity: 0, ry: P.lab.ry + 0.6 })]);
-      } else {
-        keys.push([lT, P.lab], [lT + vh * 0.45, follow(P.lab, vh * 0.45)], [lT + vh * 0.75, follow(P.lab, vh * 0.75, { opacity: 0 })]);
-      }
+      // After the anatomy tour the 3D shoe floats away; the lab uses its own 360° viewer.
+      const out = aT + aL;
+      keys.push([out + vh * 0.7, follow(P.sole, vh * 0.7, { opacity: 0, ry: P.sole.ry + 0.8 })]);
     };
     const ease = (t) => t * t * (3 - 2 * t);
     const intro = { t: 0 };
@@ -192,10 +190,6 @@ function setupScroll() {
 
   gsap.matchMedia().add({ desktop: '(min-width: 901px)', mobile: '(max-width: 900px)' }, (ctx) => {
     const { desktop } = ctx.conditions;
-    ScrollTrigger.create({
-      trigger: '#lab', start: 'top 40%', end: 'bottom 60%',
-      onToggle: (self) => stage.setDragEnabled(self.isActive),
-    });
 
     // Vault: horizontal scroll on desktop.
     if (desktop) {
@@ -275,15 +269,107 @@ let hue = 0;
 let sat = 1;
 const labName = $('#labName');
 
-function updateFallback() {
-  const img = $('#labFallback');
-  if (!img) return;
-  img.src = `shots/${variant}-0-a.png`;
-  img.style.filter = `hue-rotate(${hue}deg) saturate(${sat})`;
+/* 360° viewer: pre-rendered turntable frames, so it works on every device. */
+const FRAMES = 36;
+const spinImg = $('#spinImg');
+const frameCache = {};
+function framesFor(v) {
+  if (!frameCache[v]) {
+    frameCache[v] = Array.from({ length: FRAMES }, (_, i) => {
+      const im = new Image();
+      im.src = `spin/${v}-${String(i).padStart(2, '0')}.webp`;
+      return im;
+    });
+  }
+  return frameCache[v];
+}
+const spin = { pos: 0, vel: 0, dragging: false, lastX: 0, idle: 0, zoom: 1, zoomTo: 1, visible: false };
+function showFrame() {
+  const i = ((Math.round(spin.pos) % FRAMES) + FRAMES) % FRAMES;
+  const src = framesFor(variant)[i].src;
+  if (spinImg.getAttribute('src') !== src) spinImg.setAttribute('src', src);
+  $('#spinDeg').textContent = `${i * 10}°`;
+}
+function paintSpin() {
+  spinImg.style.filter = `hue-rotate(${hue}deg) saturate(${sat})`;
+}
+const zone = $('#labZone');
+zone.addEventListener('pointerdown', (e) => {
+  spin.dragging = true; spin.lastX = e.clientX; spin.vel = 0;
+  zone.setPointerCapture(e.pointerId); zone.classList.add('is-dragging');
+});
+zone.addEventListener('pointermove', (e) => {
+  if (!spin.dragging) return;
+  const dx = e.clientX - spin.lastX;
+  spin.lastX = e.clientX;
+  spin.vel = -dx / 12;
+  spin.pos += spin.vel;
+  spin.idle = 0;
+});
+const endDrag = () => { spin.dragging = false; zone.classList.remove('is-dragging'); };
+zone.addEventListener('pointerup', endDrag);
+zone.addEventListener('pointercancel', endDrag);
+zone.addEventListener('dblclick', () => { spin.zoomTo = spin.zoomTo > 1 ? 1 : 1.5; });
+$('#zoomIn').addEventListener('click', () => { spin.zoomTo = Math.min(2, spin.zoomTo * 1.2); });
+$('#zoomOut').addEventListener('click', () => { spin.zoomTo = Math.max(0.8, spin.zoomTo / 1.2); });
+ScrollTrigger.create({ trigger: '#lab', start: 'top bottom', end: 'bottom top', onToggle: (self) => { spin.visible = self.isActive; if (self.isActive) framesFor(variant); } });
+gsap.ticker.add((t, dt) => {
+  if (!spin.visible) return;
+  if (!spin.dragging) {
+    spin.vel *= 0.92;
+    spin.pos += spin.vel;
+    spin.idle += dt;
+    if (spin.idle > 1500 && Math.abs(spin.vel) < 0.05) spin.pos += dt * 0.006; // slow auto-turn
+  }
+  spin.zoom += (spin.zoomTo - spin.zoom) * 0.15;
+  spinImg.style.transform = `scale(${spin.zoom.toFixed(3)})`;
+  showFrame();
+});
+
+const presets = [
+  { name: 'Original', hue: 0, sat: 1 },
+  { name: 'Volt', target: 70, sat: 1.3 },
+  { name: 'Toxic', target: 120, sat: 1.2 },
+  { name: 'Ice', target: 190, sat: 0.7 },
+  { name: 'Royal', target: 228, sat: 1.2 },
+  { name: 'Grape', target: 272, sat: 1.2 },
+  { name: 'Infrared', target: 2, sat: 1.4 },
+  { name: 'Ghost', hue: 0, sat: 0 },
+];
+const presetEl = $('#presets');
+presets.forEach((p) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'preset';
+  b.title = p.name;
+  b.setAttribute('aria-label', `${p.name} colorway`);
+  b.innerHTML = `<span></span><small>${p.name}</small>`;
+  b.addEventListener('click', () => {
+    const h = p.target === undefined ? p.hue : (p.target - baseHue[variant] + 360) % 360;
+    setColor(h, p.sat);
+    $$('.preset').forEach((x) => x.classList.toggle('is-active', x === b));
+  });
+  presetEl.appendChild(b);
+});
+function paintPresets() {
+  $$('.preset span').forEach((dot, i) => {
+    const p = presets[i];
+    const h = p.target ?? baseHue[variant];
+    const sl = p.sat === 0 ? '0%' : `${Math.min(90, 70 * p.sat)}%`;
+    dot.style.background = `hsl(${h} ${sl} ${variant === 'street' && p.target === undefined && p.sat ? '25%' : '52%'})`;
+  });
+}
+function setColor(h, s2) {
+  const hueEl = $('#hue');
+  const satEl = $('#sat');
+  hueEl.value = Math.round(h);
+  satEl.value = Math.round(s2 * 100);
+  hueEl.dispatchEvent(new Event('input'));
+  satEl.dispatchEvent(new Event('input'));
 }
 
 function updateLabName() {
-  updateFallback();
+  paintSpin();
   let label = baseName[variant];
   if (hue > 4 && hue < 356) {
     const h = (baseHue[variant] + hue) % 360;
@@ -303,7 +389,10 @@ $$('.swatch').forEach((btn) =>
       b.classList.toggle('is-active', b === btn);
       b.setAttribute('aria-checked', b === btn);
     });
-    gsap.fromTo(stage.state, { scale: stage.state.scale * 0.92 }, { scale: stage.state.scale, duration: 0.6, ease: 'back.out(3)' });
+    gsap.fromTo(spinImg, { scale: spin.zoom * 0.9 }, { scale: spin.zoom, duration: 0.5, ease: 'back.out(3)', clearProps: 'scale' });
+    framesFor(variant);
+    showFrame();
+    paintPresets();
     updateLabName();
   })
 );
@@ -355,9 +444,7 @@ $('#addToBag').addEventListener('click', () => {
   addToBag(`Added ${labName.textContent.replace('HX-RUNNER ', '')} · US ${pickedSize}`);
 });
 
-stage.bindDrag($('#labZone'));
-$('#zoomIn').addEventListener('click', () => stage.zoomBy(1.2));
-$('#zoomOut').addEventListener('click', () => stage.zoomBy(1 / 1.2));
+paintPresets();
 
 /* ---------------- Toast ---------------- */
 let toastTimer;

@@ -54,10 +54,10 @@ export function createStage(canvas, { onProgress, modelUrl = MODEL_URL } = {}) {
   const key = new THREE.DirectionalLight(0xffffff, 2.2);
   key.position.set(3, 5, 6);
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0xd4ff3a, 2.4);
+  const rim = new THREE.DirectionalLight(0xffffff, 1.6);
   rim.position.set(-6, 2, -4);
   scene.add(rim);
-  const fill = new THREE.DirectionalLight(0x7aa2ff, 0.6);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.9);
   fill.position.set(-4, -2, 5);
   scene.add(fill);
 

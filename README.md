@@ -10,13 +10,13 @@ npm run dev
 ## What's in it
 - **Hero:** a real-time 3D sneaker flies in over giant "GRAIL HAUS" type and follows the cursor.
 - **Anatomy tour:** a pinned scroll section where the shoe turns to show the upper, the midsole and the outsole, with callouts.
-- **Colorway lab:** drag to spin, double-click or +/- to zoom, swap the base colorway, shift hue and saturation (the colorway name updates), pick a size, add to bag.
+- **Colorway lab:** a 360° turntable built from pre-rendered frames (`public/spin`, made by `tools/render-spin.mjs`), so it works on any device. Drag to spin, zoom, swap base colorway, tap quick colors or set a custom hue and saturation (the colorway name updates), pick a size, add to bag.
 - **Sell / trade:** an instant offer calculator (pair, size, box, condition) showing cash vs. +20% trade credit.
 - **Raffle:** a live countdown to the next Friday 10:00 drop, plus an entry form (front end only).
 - **Vault:** a horizontal-scroll product rail (swipe on phones) with resale prices, hover flip and tilt. Clicking a pair loads it into the lab.
 - Loader, custom cursor, magnetic buttons, scroll-speed marquee, count-up stats.
 
-Stack: Vite, three.js, GSAP ScrollTrigger, Lenis. Fonts: Unbounded, Space Grotesk, JetBrains Mono (self-hosted).
+Stack: Vite, three.js, GSAP ScrollTrigger, Lenis. Light, clean theme. Fonts: Unbounded, Space Grotesk, JetBrains Mono (self-hosted).
 
 ## Files
 - `src/stage.js`: the WebGL scene (model, lights, hue-shift shader, drag/zoom).
