@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GRAILHAUS | Rare pairs. No bots. No fakes.</title>
-    <meta name="description" content="GRAILHAUS: a sneaker store for people who know. Raffles, deadstock grails, and a 3D colorway lab." />
+    <title>HEAT XCHANGE | Buy. Sell. Trade.</title>
+    <meta name="description" content="HEAT XCHANGE: buy, sell and trade authenticated sneakers. Raffles, deadstock grails, instant trade-in offers and a 3D colorway lab." />
     <meta name="theme-color" content="#0b0b0c" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b0c'/%3E%3Cpath d='M14 40c8 0 12-14 22-14 6 0 8 4 14 4v10H14z' fill='%23d4ff3a'/%3E%3C/svg%3E" />
   </head>
@@ -12,7 +12,7 @@
     <!-- Loader -->
     <div class="loader" id="loader" aria-hidden="true">
       <div class="loader__inner">
-        <div class="loader__brand">GRAILHAUS</div>
+        <div class="loader__brand">HEAT XCHANGE</div>
         <div class="loader__count"><span id="loaderCount">000</span><small>%</small></div>
         <div class="loader__bar"><span id="loaderBar"></span></div>
         <div class="loader__note">Lacing up</div>
@@ -24,15 +24,15 @@
     <div class="cursor" id="cursor" aria-hidden="true"><span class="cursor__label" id="cursorLabel"></span></div>
 
     <header class="nav" id="nav">
-      <a href="#top" class="nav__logo" aria-label="GRAILHAUS home">
+      <a href="#top" class="nav__logo" aria-label="HEAT XCHANGE home">
         <svg viewBox="0 0 40 24" aria-hidden="true"><path d="M2 18c7 0 10-12 19-12 5 0 7 3 13 3h4v9H2z" fill="currentColor"/><path d="M2 21h36" stroke="currentColor" stroke-width="2"/></svg>
-        <span>GRAILHAUS</span>
+        <span>HEAT<b>X</b>CHANGE</span>
       </a>
       <nav class="nav__links" aria-label="Main">
-        <a href="#anatomy">Anatomy</a>
+                <a href="#vault">Shop</a>
+        <a href="#trade">Sell / Trade</a>
         <a href="#lab">Lab</a>
         <a href="#drop">Raffle</a>
-        <a href="#vault">Vault</a>
       </nav>
       <button class="nav__bag" id="bagBtn" type="button" aria-label="Bag">
         Bag <span class="nav__count" id="bagCount">0</span>
@@ -42,14 +42,16 @@
     <main id="top">
       <!-- HERO -->
       <section class="hero" id="hero">
-        <h1 class="hero__word" aria-label="GRAILHAUS">
-          <span class="hero__line"><span class="split">GRAIL</span></span>
-          <span class="hero__line hero__line--outline"><span class="split">HAUS</span></span>
+        <h1 class="hero__word" aria-label="HEAT XCHANGE">
+          <span class="hero__line"><span class="split">HEAT</span></span>
+          <span class="hero__line hero__line--outline"><span class="split">XCHANGE</span></span>
         </h1>
+
+        <img src="shots/midnight-0-a.png" alt="" class="fallback fallback--hero" aria-hidden="true" />
 
         <div class="hero__meta hero__meta--tl reveal">
           <span class="tag tag--volt">Drop 027</span>
-          <span class="mono">GH-RUNNER "WAVE"</span>
+          <span class="mono">HX-RUNNER "WAVE"</span>
         </div>
         <div class="hero__meta hero__meta--tr reveal mono">
           <span>Retail <b>$220</b></span>
@@ -58,17 +60,17 @@
         </div>
 
         <div class="hero__bottom">
-          <p class="hero__lede reveal">Rare pairs. No bots. No fakes.<br /><span>Every pair authenticated in-house before it ships.</span></p>
+          <p class="hero__lede reveal">Buy. Sell. Trade.<br />Heat only.<span>Every pair authenticated in-house. Cash or trade credit in 48 hours.</span></p>
           <div class="hero__ctas reveal">
-            <a href="#drop" class="btn btn--volt magnetic">Enter the raffle</a>
-            <a href="#vault" class="btn btn--ghost magnetic">Shop the vault</a>
+            <a href="#vault" class="btn btn--volt magnetic">Shop heat</a>
+            <a href="#trade" class="btn btn--ghost magnetic">Sell or trade</a>
           </div>
         </div>
 
         <div class="badge reveal" aria-hidden="true">
           <svg viewBox="0 0 120 120">
             <defs><path id="circ" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0" /></defs>
-            <text><textPath href="#circ">100% AUTHENTIC &#183; VERIFIED IN-HOUSE &#183; DS ONLY &#183;</textPath></text>
+            <text><textPath href="#circ">BUY &#183; SELL &#183; TRADE &#183; 100% AUTHENTIC &#183;</textPath></text>
           </svg>
           <span class="badge__check">
             <svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -80,7 +82,7 @@
       <!-- MARQUEE -->
       <div class="marquee" aria-hidden="true">
         <div class="marquee__track" id="marquee1">
-          <span>New heat every Friday</span><i></i><span>Deadstock only</span><i></i><span>Authenticated in-house</span><i></i><span>No bots allowed</span><i></i><span>Ships in 48h</span><i></i>
+          <span>Buy</span><i></i><span>Sell</span><i></i><span>Trade</span><i></i><span>New heat every Friday</span><i></i><span>Authenticated in-house</span><i></i><span>Get paid in 48h</span><i></i>
         </div>
       </div>
 
@@ -92,6 +94,7 @@
             <div class="anatomy__index mono"><span id="anatIdx">01</span> / 03</div>
           </div>
 
+          <img src="shots/midnight-0-a.png" alt="" class="fallback fallback--anat" aria-hidden="true" />
           <div class="anatomy__steps">
             <article class="step is-active" data-step="0">
               <h2 class="step__title">The upper</h2>
@@ -122,6 +125,7 @@
       <!-- LAB -->
       <section class="lab" id="lab">
         <div class="lab__zone" id="labZone" aria-label="Drag to spin the sneaker">
+          <img src="shots/midnight-0-a.png" alt="" class="fallback fallback--lab" id="labFallback" aria-hidden="true" />
           <div class="lab__hint mono"><span>Drag to spin</span><span>Double-click to zoom</span></div>
           <div class="lab__zoom">
             <button type="button" id="zoomOut" aria-label="Zoom out">&minus;</button>
@@ -132,7 +136,7 @@
         <div class="lab__panel">
           <span class="eyebrow">The colorway lab</span>
           <h2 class="lab__title">Make it <em>yours.</em></h2>
-          <p class="lab__name mono" id="labName">GH-RUNNER "WAVE"</p>
+          <p class="lab__name mono" id="labName">HX-RUNNER "WAVE"</p>
 
           <div class="field">
             <div class="field__label mono">Base</div>
@@ -168,20 +172,72 @@
       <section class="stats">
         <div class="stat"><b data-count="12480">0</b><span class="mono">Pairs authenticated</span></div>
         <div class="stat"><b data-count="48" data-suffix="h">0</b><span class="mono">Average ship time</span></div>
-        <div class="stat"><b data-count="0" data-final="0">0</b><span class="mono">Fakes shipped. Ever.</span></div>
-        <div class="stat"><b data-count="97" data-suffix="%">0</b><span class="mono">Of raffles bot-free</span></div>
+        <div class="stat"><b data-count="2.4" data-prefix="$" data-suffix="M" data-dec="1">0</b><span class="mono">Paid out to sellers</span></div>
+        <div class="stat"><b data-count="0">0</b><span class="mono">Fakes shipped. Ever.</span></div>
+      </section>
+
+      <!-- SELL / TRADE -->
+      <section class="trade" id="trade">
+        <div class="trade__intro">
+          <span class="eyebrow">Sell or trade</span>
+          <h2 class="trade__title">Got heat?<br /><em>Get paid.</em></h2>
+          <p class="trade__lede">Sell your pairs for cash or trade them in for store credit worth 20% more. Every pair is authenticated, so buyers trust it and you get top dollar.</p>
+          <ol class="trade__steps">
+            <li><b>01</b><div><h3>Get an instant offer</h3><p>Pick the pair, size and condition. Your price shows up right away.</p></div></li>
+            <li><b>02</b><div><h3>Ship free or drop off</h3><p>Prepaid label, or walk in and skip the wait.</p></div></li>
+            <li><b>03</b><div><h3>Cash or credit in 48h</h3><p>Cash to your account, or trade credit to cop your next grail.</p></div></li>
+          </ol>
+        </div>
+
+        <form class="offer" id="offer" novalidate>
+          <div class="offer__top">
+            <div class="offer__img"><img id="offerImg" src="shots/street-0-a.png" alt="" /></div>
+            <div>
+              <span class="mono offer__label">Instant offer</span>
+              <label class="sr-only" for="offerPair">Pair</label>
+              <select id="offerPair" class="offer__select"></select>
+            </div>
+          </div>
+          <div class="offer__row">
+            <div class="field">
+              <label class="field__label mono" for="offerSize">Size (US)</label>
+              <select id="offerSize" class="offer__select"></select>
+            </div>
+            <div class="field">
+              <div class="field__label mono">Original box</div>
+              <div class="seg" role="radiogroup" aria-label="Original box">
+                <button type="button" class="is-active" data-box="1" role="radio" aria-checked="true">Yes</button>
+                <button type="button" data-box="0" role="radio" aria-checked="false">No</button>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field__label mono">Condition</div>
+            <div class="seg seg--3" role="radiogroup" aria-label="Condition">
+              <button type="button" class="is-active" data-cond="ds" role="radio" aria-checked="true">DS<small>Brand new</small></button>
+              <button type="button" data-cond="vnds" role="radio" aria-checked="false">VNDS<small>Worn 1-2x</small></button>
+              <button type="button" data-cond="used" role="radio" aria-checked="false">Used<small>Daily beaters</small></button>
+            </div>
+          </div>
+          <div class="offer__out">
+            <button type="button" class="offer__opt" data-pay="cash"><span class="mono">Cash</span><b id="offerCash">$0</b></button>
+            <button type="button" class="offer__opt is-active" data-pay="credit"><span class="mono">Trade credit <i>+20%</i></span><b id="offerCredit">$0</b></button>
+          </div>
+          <button type="submit" class="btn btn--volt offer__go">Lock in offer</button>
+          <p class="mono offer__note">Offer held for 7 days. Demo only, nothing is sent.</p>
+        </form>
       </section>
 
       <!-- DROP / RAFFLE -->
       <section class="drop" id="drop">
         <div class="drop__media">
           <div class="drop__glow"></div>
-          <img src="shots/street-0-a.png" alt="GH-Runner Bred colorway sneaker" class="drop__img" loading="lazy" />
+          <img src="shots/street-0-a.png" alt="HX-Runner Bred colorway sneaker" class="drop__img" loading="lazy" />
           <span class="tag tag--orange drop__tag">Raffle open</span>
         </div>
         <div class="drop__body">
           <span class="eyebrow">Next drop &middot; Friday 10:00</span>
-          <h2 class="drop__title">GH-Runner <span>"Bred"</span></h2>
+          <h2 class="drop__title">HX-Runner <span>"Bred"</span></h2>
           <div class="countdown" id="countdown" aria-live="off">
             <div><b data-unit="d">00</b><span class="mono">Days</span></div>
             <div><b data-unit="h">00</b><span class="mono">Hrs</span></div>
@@ -206,10 +262,10 @@
         <div class="vault__pin">
           <div class="vault__head">
             <div>
-              <span class="eyebrow">The vault</span>
+              <span class="eyebrow">Shop the vault</span>
               <h2 class="vault__title">Deadstock.<br />Verified. <em>Ready.</em></h2>
             </div>
-            <p class="vault__lede">Hand-picked grails, checked by our authenticators and ready to ship today. Hover a pair to flip it.</p>
+            <p class="vault__lede">Pairs from sellers like you, checked by our authenticators and ready to ship today. Hover to flip, click to remix it in the lab.</p>
           </div>
           <div class="vault__track" id="vaultTrack"></div>
         </div>
@@ -225,9 +281,9 @@
             <button type="submit" class="btn btn--volt" aria-label="Sign up for drop alerts">&rarr;</button>
           </form>
         </div>
-        <div class="footer__big" aria-hidden="true">GRAILHAUS</div>
+        <div class="footer__big" aria-hidden="true">HEATXCHANGE</div>
         <div class="footer__row mono">
-          <span>&copy; 2026 GRAILHAUS (demo)</span>
+          <span>&copy; 2026 HEAT XCHANGE (demo)</span>
           <span>Instagram &middot; TikTok &middot; Discord</span>
           <span>3D model &copy; 2021 Shopify, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></span>
         </div>

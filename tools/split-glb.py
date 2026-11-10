@@ -1,4 +1,4 @@
-"""Split a .glb into shoe.json (glTF with an embedded geometry buffer) + .jpg textures.
+"""Split a .glb into shoe.json + shoe-geometry.txt (base64 buffer) + .jpg textures.
 Artifact hosting doesn't serve .glb, but it does serve .json and .jpg."""
 import json, struct, base64, sys, os
 src, outdir = sys.argv[1], sys.argv[2]
@@ -26,6 +26,9 @@ for i, v in enumerate(gltf['bufferViews']):
 gltf['bufferViews'] = views
 for a in gltf['accessors']:
     if 'bufferView' in a: a['bufferView'] = idx[a['bufferView']]
-gltf['buffers'] = [{'byteLength': len(new), 'uri': 'data:application/octet-stream;base64,' + base64.b64encode(bytes(new)).decode()}]
+# Geometry goes in a base64 .txt (a served type). The page rebuilds a GLB in
+# memory, so nothing depends on data: URIs, which sandboxed viewers can block.
+gltf['buffers'] = [{'byteLength': len(new)}]
+open(os.path.join(outdir, 'shoe-geometry.txt'), 'w').write(base64.b64encode(bytes(new)).decode())
 json.dump(gltf, open(os.path.join(outdir, 'shoe.json'), 'w'), separators=(',', ':'))
 print('buffer', len(new))

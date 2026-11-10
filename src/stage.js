@@ -133,10 +133,39 @@ export function createStage(canvas, { onProgress, modelUrl = MODEL_URL } = {}) {
     el.addEventListener('dblclick', () => { zoomTarget = zoomTarget > 1 ? 1 : 1.45; });
   }
 
+  // Fetch the glTF JSON + base64 geometry, rebuild a GLB in memory and parse it.
+  // This avoids data: URIs, which sandboxed preview hosts can block.
+  async function fetchModel() {
+    const base = modelUrl.slice(0, modelUrl.lastIndexOf('/') + 1);
+    const [json, b64] = await Promise.all([
+      fetch(modelUrl).then((r) => { if (!r.ok) throw new Error(`model ${r.status}`); return r.json(); }),
+      fetch(base + 'shoe-geometry.txt').then((r) => { if (!r.ok) throw new Error(`geometry ${r.status}`); return r.text(); }),
+    ]);
+    onProgress?.(0.4);
+    const raw = atob(b64.trim());
+    const bin = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bin[i] = raw.charCodeAt(i);
+    let jsonBytes = new TextEncoder().encode(JSON.stringify(json));
+    const jPad = (4 - (jsonBytes.length % 4)) % 4;
+    const bPad = (4 - (bin.length % 4)) % 4;
+    const jLen = jsonBytes.length + jPad;
+    const bLen = bin.length + bPad;
+    const glb = new Uint8Array(12 + 8 + jLen + 8 + bLen);
+    const dv = new DataView(glb.buffer);
+    dv.setUint32(0, 0x46546c67, true); dv.setUint32(4, 2, true); dv.setUint32(8, glb.length, true);
+    dv.setUint32(12, jLen, true); dv.setUint32(16, 0x4e4f534a, true);
+    glb.set(jsonBytes, 20); glb.fill(0x20, 20 + jsonBytes.length, 20 + jLen);
+    const bo = 20 + jLen;
+    dv.setUint32(bo, bLen, true); dv.setUint32(bo + 4, 0x004e4942, true);
+    glb.set(bin, bo + 8);
+    return { glb: glb.buffer, base };
+  }
+
   const loader = new GLTFLoader();
   const ready = new Promise((resolve, reject) => {
-    loader.load(
-      modelUrl,
+    fetchModel().then(({ glb, base }) => loader.parse(
+      glb,
+      base,
       async (gltf) => {
         const root = gltf.scene;
         root.traverse((o) => { if (o.isMesh) mesh = o; });
@@ -160,11 +189,11 @@ export function createStage(canvas, { onProgress, modelUrl = MODEL_URL } = {}) {
           for (const v of m.variants) variants[names[v]] = mat;
         }
         setVariant('midnight');
+        onProgress?.(1);
         resolve();
       },
-      (e) => { if (e.total && onProgress) onProgress(e.loaded / e.total); },
       reject
-    );
+    )).catch(reject);
   });
 
   function setVariant(name) {

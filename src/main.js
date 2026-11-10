@@ -49,13 +49,31 @@ const setPct = (p) => {
   loaderBar.style.width = `${shownPct * 100}%`;
 };
 
-const stage = createStage($('#stage'), { onProgress: (p) => setPct(p * 0.95) });
+// If WebGL or the model fails, fall back to rendered photos so the page never
+// shows an empty stage.
+function noStage() {
+  const state = {};
+  return {
+    ready: Promise.reject(new Error('WebGL unavailable')), state, uniforms: { uHue: { value: 0 }, uSat: { value: 1 } },
+    setVariant() {}, bindDrag() {}, setDragEnabled() {}, zoomBy() {}, worldHeight: () => 5,
+  };
+}
+let stage;
+try {
+  stage = createStage($('#stage'), { onProgress: (p) => setPct(p * 0.95) });
+} catch (err) {
+  console.error(err);
+  stage = noStage();
+}
 const S = stage.state;
 // Start state: shoe dropped out of frame so the intro can fly it in.
 Object.assign(S, { y: -4, ry: -2.2, rx: 0.6, scale: 0.7 });
 
 stage.ready
-  .catch((err) => console.error('Model failed to load', err))
+  .catch((err) => {
+    console.error('3D unavailable, using photos', err);
+    document.documentElement.classList.add('no-3d');
+  })
   .finally(() => {
     setPct(1);
     setTimeout(intro, 350);
@@ -219,16 +237,18 @@ function setupScroll() {
   $$('.stat b').forEach((el) => {
     const end = +el.dataset.count;
     const suffix = el.dataset.suffix || '';
+    const prefix = el.dataset.prefix || '';
+    const dec = +(el.dataset.dec || 0);
     const o = { v: 0 };
     ScrollTrigger.create({
       trigger: el, start: 'top 85%', once: true,
-      onEnter: () => gsap.to(o, { v: end, duration: 1.8, ease: 'power3.out', onUpdate: () => (el.textContent = Math.round(o.v).toLocaleString('en-US') + suffix) }),
+      onEnter: () => gsap.to(o, { v: end, duration: 1.8, ease: 'power3.out', onUpdate: () => (el.textContent = prefix + o.v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + suffix) }),
     });
-    el.textContent = '0' + suffix;
+    el.textContent = prefix + (0).toFixed(dec) + suffix;
   });
 
   // Section titles slide up.
-  $$('.vault__title, .drop__title, .footer__title, .lab__title').forEach((el) =>
+  $$('.vault__title, .drop__title, .footer__title, .lab__title, .trade__title').forEach((el) =>
     gsap.from(el, { y: 60, opacity: 0, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 88%' } })
   );
 
@@ -255,7 +275,15 @@ let hue = 0;
 let sat = 1;
 const labName = $('#labName');
 
+function updateFallback() {
+  const img = $('#labFallback');
+  if (!img) return;
+  img.src = `shots/${variant}-0-a.png`;
+  img.style.filter = `hue-rotate(${hue}deg) saturate(${sat})`;
+}
+
 function updateLabName() {
+  updateFallback();
   let label = baseName[variant];
   if (hue > 4 && hue < 356) {
     const h = (baseHue[variant] + hue) % 360;
@@ -264,7 +292,7 @@ function updateLabName() {
   }
   if (sat < 0.25) label = 'Ghost';
   else if (sat > 1.6) label = `Neon ${label}`;
-  labName.textContent = `GH-RUNNER "${label}"`.toUpperCase();
+  labName.textContent = `HX-RUNNER "${label}"`.toUpperCase();
 }
 
 $$('.swatch').forEach((btn) =>
@@ -324,7 +352,7 @@ $('#addToBag').addEventListener('click', () => {
     gsap.fromTo('#sizes', { x: -8 }, { x: 0, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
     return;
   }
-  addToBag(`Added ${labName.textContent.replace('GH-RUNNER ', '')} · US ${pickedSize}`);
+  addToBag(`Added ${labName.textContent.replace('HX-RUNNER ', '')} · US ${pickedSize}`);
 });
 
 stage.bindDrag($('#labZone'));
@@ -387,6 +415,47 @@ $('#alerts').addEventListener('submit', (e) => {
   input.value = '';
   toast("You're on the list. (Demo)");
 });
+
+/* ---------------- Sell / trade offer ---------------- */
+{
+  const pairSel = $('#offerPair');
+  const sizeSel = $('#offerSize');
+  products.forEach((p) => pairSel.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.name} ${p.cw}</option>`));
+  sizes.forEach((s) => sizeSel.insertAdjacentHTML('beforeend', `<option value="${s}" ${s === 10 ? 'selected' : ''}>US ${s}</option>`));
+  pairSel.value = 'street-0';
+  const factor = { ds: 0.72, vnds: 0.6, used: 0.42 };
+  let cond = 'ds', box = 1, pay = 'credit';
+  const money = (n) => `$${Math.round(n).toLocaleString('en-US')}`;
+  const shown = { cash: 0, credit: 0 };
+  function update() {
+    const p = products.find((x) => x.id === pairSel.value);
+    $('#offerImg').src = `shots/${p.id}-a.png`;
+    const sizeAdj = [9, 9.5, 10, 10.5, 11].includes(+sizeSel.value) ? 1.04 : 1;
+    const cash = p.price * factor[cond] * (box ? 1 : 0.9) * sizeAdj;
+    gsap.to(shown, {
+      cash, credit: cash * 1.2, duration: 0.6, ease: 'power3.out',
+      onUpdate: () => { $('#offerCash').textContent = money(shown.cash); $('#offerCredit').textContent = money(shown.credit); },
+    });
+  }
+  const seg = (sel, cb) => $$(sel).forEach((b) => b.addEventListener('click', () => {
+    $$(sel).forEach((x) => { x.classList.toggle('is-active', x === b); x.setAttribute('aria-checked', x === b); });
+    cb(b); update();
+  }));
+  seg('[data-cond]', (b) => (cond = b.dataset.cond));
+  seg('[data-box]', (b) => (box = +b.dataset.box));
+  $$('.offer__opt').forEach((b) => b.addEventListener('click', () => {
+    pay = b.dataset.pay;
+    $$('.offer__opt').forEach((x) => x.classList.toggle('is-active', x === b));
+  }));
+  pairSel.addEventListener('change', update);
+  sizeSel.addEventListener('change', update);
+  $('#offer').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const amt = pay === 'cash' ? $('#offerCash').textContent : $('#offerCredit').textContent;
+    toast(`Offer locked: ${amt} ${pay === 'cash' ? 'cash' : 'trade credit'} (demo)`);
+  });
+  update();
+}
 
 /* ---------------- Vault cards ---------------- */
 function spark(up) {
