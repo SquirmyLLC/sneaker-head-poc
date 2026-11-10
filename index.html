@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GRAILHAUS | Rare pairs. No bots. No fakes.</title>
+    <meta name="description" content="GRAILHAUS: a sneaker store for people who know. Raffles, deadstock grails, and a 3D colorway lab." />
+    <meta name="theme-color" content="#0b0b0c" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b0c'/%3E%3Cpath d='M14 40c8 0 12-14 22-14 6 0 8 4 14 4v10H14z' fill='%23d4ff3a'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <!-- Loader -->
+    <div class="loader" id="loader" aria-hidden="true">
+      <div class="loader__inner">
+        <div class="loader__brand">GRAILHAUS</div>
+        <div class="loader__count"><span id="loaderCount">000</span><small>%</small></div>
+        <div class="loader__bar"><span id="loaderBar"></span></div>
+        <div class="loader__note">Lacing up</div>
+      </div>
+    </div>
+
+    <canvas id="stage" class="stage" aria-hidden="true"></canvas>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="cursor" id="cursor" aria-hidden="true"><span class="cursor__label" id="cursorLabel"></span></div>
+
+    <header class="nav" id="nav">
+      <a href="#top" class="nav__logo" aria-label="GRAILHAUS home">
+        <svg viewBox="0 0 40 24" aria-hidden="true"><path d="M2 18c7 0 10-12 19-12 5 0 7 3 13 3h4v9H2z" fill="currentColor"/><path d="M2 21h36" stroke="currentColor" stroke-width="2"/></svg>
+        <span>GRAILHAUS</span>
+      </a>
+      <nav class="nav__links" aria-label="Main">
+        <a href="#anatomy">Anatomy</a>
+        <a href="#lab">Lab</a>
+        <a href="#drop">Raffle</a>
+        <a href="#vault">Vault</a>
+      </nav>
+      <button class="nav__bag" id="bagBtn" type="button" aria-label="Bag">
+        Bag <span class="nav__count" id="bagCount">0</span>
+      </button>
+    </header>
+
+    <main id="top">
+      <!-- HERO -->
+      <section class="hero" id="hero">
+        <h1 class="hero__word" aria-label="GRAILHAUS">
+          <span class="hero__line"><span class="split">GRAIL</span></span>
+          <span class="hero__line hero__line--outline"><span class="split">HAUS</span></span>
+        </h1>
+
+        <div class="hero__meta hero__meta--tl reveal">
+          <span class="tag tag--volt">Drop 027</span>
+          <span class="mono">GH-RUNNER "WAVE"</span>
+        </div>
+        <div class="hero__meta hero__meta--tr reveal mono">
+          <span>Retail <b>$220</b></span>
+          <span>Resale <b class="up">$540 &uarr;</b></span>
+          <span>Pairs <b>300</b></span>
+        </div>
+
+        <div class="hero__bottom">
+          <p class="hero__lede reveal">Rare pairs. No bots. No fakes.<br /><span>Every pair authenticated in-house before it ships.</span></p>
+          <div class="hero__ctas reveal">
+            <a href="#drop" class="btn btn--volt magnetic">Enter the raffle</a>
+            <a href="#vault" class="btn btn--ghost magnetic">Shop the vault</a>
+          </div>
+        </div>
+
+        <div class="badge reveal" aria-hidden="true">
+          <svg viewBox="0 0 120 120">
+            <defs><path id="circ" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0" /></defs>
+            <text><textPath href="#circ">100% AUTHENTIC &#183; VERIFIED IN-HOUSE &#183; DS ONLY &#183;</textPath></text>
+          </svg>
+          <span class="badge__check">
+            <svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="scroll-cue mono" aria-hidden="true"><span></span>Scroll</div>
+      </section>
+
+      <!-- MARQUEE -->
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee__track" id="marquee1">
+          <span>New heat every Friday</span><i></i><span>Deadstock only</span><i></i><span>Authenticated in-house</span><i></i><span>No bots allowed</span><i></i><span>Ships in 48h</span><i></i>
+        </div>
+      </div>
+
+      <!-- ANATOMY (pinned) -->
+      <section class="anatomy" id="anatomy">
+        <div class="anatomy__pin">
+          <div class="anatomy__head">
+            <span class="eyebrow">Anatomy of a grail</span>
+            <div class="anatomy__index mono"><span id="anatIdx">01</span> / 03</div>
+          </div>
+
+          <div class="anatomy__steps">
+            <article class="step is-active" data-step="0">
+              <h2 class="step__title">The upper</h2>
+              <p>Tumbled suede overlays on breathable mesh. Every pair is checked for glue stains, loose threads and factory flaws.</p>
+            </article>
+            <article class="step" data-step="1">
+              <h2 class="step__title">The midsole</h2>
+              <p>Dual-density foam. Soft under the heel, snappy at toe-off. Built for all-day wear, not just the 'fit pic.</p>
+            </article>
+            <article class="step" data-step="2">
+              <h2 class="step__title">The outsole</h2>
+              <p>Herringbone rubber that grips concrete, courts and the line outside the store at 6am.</p>
+            </article>
+          </div>
+
+          <div class="callouts" aria-hidden="true">
+            <div class="callout" data-step="0" style="--x: 62%; --y: 30%"><span class="callout__dot"></span><span class="callout__text mono">Suede overlay</span></div>
+            <div class="callout" data-step="0" style="--x: 40%; --y: 62%"><span class="callout__dot"></span><span class="callout__text mono">Air mesh</span></div>
+            <div class="callout" data-step="1" style="--x: 66%; --y: 70%"><span class="callout__dot"></span><span class="callout__text mono">Dual foam</span></div>
+            <div class="callout" data-step="1" style="--x: 38%; --y: 38%"><span class="callout__dot"></span><span class="callout__text mono">Padded collar</span></div>
+            <div class="callout" data-step="2" style="--x: 60%; --y: 46%"><span class="callout__dot"></span><span class="callout__text mono">Herringbone grip</span></div>
+          </div>
+
+          <div class="anatomy__progress"><span id="anatBar"></span></div>
+        </div>
+      </section>
+
+      <!-- LAB -->
+      <section class="lab" id="lab">
+        <div class="lab__zone" id="labZone" aria-label="Drag to spin the sneaker">
+          <div class="lab__hint mono"><span>Drag to spin</span><span>Double-click to zoom</span></div>
+          <div class="lab__zoom">
+            <button type="button" id="zoomOut" aria-label="Zoom out">&minus;</button>
+            <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+          </div>
+        </div>
+
+        <div class="lab__panel">
+          <span class="eyebrow">The colorway lab</span>
+          <h2 class="lab__title">Make it <em>yours.</em></h2>
+          <p class="lab__name mono" id="labName">GH-RUNNER "WAVE"</p>
+
+          <div class="field">
+            <div class="field__label mono">Base</div>
+            <div class="swatches" role="radiogroup" aria-label="Base colorway">
+              <button type="button" class="swatch is-active" role="radio" aria-checked="true" data-variant="midnight" style="--a:#1b8fd0;--b:#f4f4f4"><span></span>Wave</button>
+              <button type="button" class="swatch" role="radio" aria-checked="false" data-variant="beach" style="--a:#e6b0bb;--b:#f4f4f4"><span></span>Rose</button>
+              <button type="button" class="swatch" role="radio" aria-checked="false" data-variant="street" style="--a:#151515;--b:#ff4f4f"><span></span>Bred</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label mono" for="hue">Hue shift <output id="hueOut">0&deg;</output></label>
+            <input type="range" id="hue" class="range range--hue" min="0" max="360" value="0" />
+          </div>
+          <div class="field">
+            <label class="field__label mono" for="sat">Saturation <output id="satOut">100%</output></label>
+            <input type="range" id="sat" class="range" min="0" max="200" value="100" />
+          </div>
+
+          <div class="field">
+            <div class="field__label mono">Size (US)</div>
+            <div class="sizes" id="sizes"></div>
+          </div>
+
+          <div class="lab__buy">
+            <div class="lab__price"><span class="mono">Price</span><b>$220</b></div>
+            <button type="button" class="btn btn--volt magnetic" id="addToBag">Add to bag</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STATS -->
+      <section class="stats">
+        <div class="stat"><b data-count="12480">0</b><span class="mono">Pairs authenticated</span></div>
+        <div class="stat"><b data-count="48" data-suffix="h">0</b><span class="mono">Average ship time</span></div>
+        <div class="stat"><b data-count="0" data-final="0">0</b><span class="mono">Fakes shipped. Ever.</span></div>
+        <div class="stat"><b data-count="97" data-suffix="%">0</b><span class="mono">Of raffles bot-free</span></div>
+      </section>
+
+      <!-- DROP / RAFFLE -->
+      <section class="drop" id="drop">
+        <div class="drop__media">
+          <div class="drop__glow"></div>
+          <img src="shots/street-0-a.png" alt="GH-Runner Bred colorway sneaker" class="drop__img" loading="lazy" />
+          <span class="tag tag--orange drop__tag">Raffle open</span>
+        </div>
+        <div class="drop__body">
+          <span class="eyebrow">Next drop &middot; Friday 10:00</span>
+          <h2 class="drop__title">GH-Runner <span>"Bred"</span></h2>
+          <div class="countdown" id="countdown" aria-live="off">
+            <div><b data-unit="d">00</b><span class="mono">Days</span></div>
+            <div><b data-unit="h">00</b><span class="mono">Hrs</span></div>
+            <div><b data-unit="m">00</b><span class="mono">Min</span></div>
+            <div><b data-unit="s">00</b><span class="mono">Sec</span></div>
+          </div>
+          <form class="raffle" id="raffle" novalidate>
+            <label class="sr-only" for="raffleEmail">Email</label>
+            <input id="raffleEmail" type="email" placeholder="you@email.com" required autocomplete="email" />
+            <label class="sr-only" for="raffleSize">Size</label>
+            <select id="raffleSize" required>
+              <option value="">Size</option>
+            </select>
+            <button type="submit" class="btn btn--volt">Enter raffle</button>
+          </form>
+          <p class="raffle__note mono" id="raffleNote">One entry per person. Bots get banned. Winners hear back Thursday.</p>
+        </div>
+      </section>
+
+      <!-- VAULT (horizontal) -->
+      <section class="vault" id="vault">
+        <div class="vault__pin">
+          <div class="vault__head">
+            <div>
+              <span class="eyebrow">The vault</span>
+              <h2 class="vault__title">Deadstock.<br />Verified. <em>Ready.</em></h2>
+            </div>
+            <p class="vault__lede">Hand-picked grails, checked by our authenticators and ready to ship today. Hover a pair to flip it.</p>
+          </div>
+          <div class="vault__track" id="vaultTrack"></div>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="footer">
+        <div class="footer__cta">
+          <h2 class="footer__title">Don't take<br /><em>the L.</em></h2>
+          <form class="alerts" id="alerts" novalidate>
+            <label class="sr-only" for="alertEmail">Email for drop alerts</label>
+            <input id="alertEmail" type="email" placeholder="Get drop alerts" required autocomplete="email" />
+            <button type="submit" class="btn btn--volt" aria-label="Sign up for drop alerts">&rarr;</button>
+          </form>
+        </div>
+        <div class="footer__big" aria-hidden="true">GRAILHAUS</div>
+        <div class="footer__row mono">
+          <span>&copy; 2026 GRAILHAUS (demo)</span>
+          <span>Instagram &middot; TikTok &middot; Discord</span>
+          <span>3D model &copy; 2021 Shopify, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></span>
+        </div>
+      </footer>
+    </main>
+
+    <div class="toast mono" id="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

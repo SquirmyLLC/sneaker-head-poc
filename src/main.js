@@ -1,0 +1,479 @@
+import './style.css';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Lenis from 'lenis';
+import { createStage } from './stage.js';
+import { products, hueNames, sizes, soldOut, baseHue, baseName } from './data.js';
+
+gsap.registerPlugin(ScrollTrigger);
+
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouch = window.matchMedia('(pointer: coarse)').matches;
+
+document.body.classList.add('is-loading');
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+
+/* ---------------- Smooth scroll ---------------- */
+const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+lenis.stop();
+window.__lenis = lenis;
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add((t) => lenis.raf(t * 1000));
+gsap.ticker.lagSmoothing(0);
+
+$$('a[href^="#"]').forEach((a) =>
+  a.addEventListener('click', (e) => {
+    const id = a.getAttribute('href');
+    const target = id === '#top' ? 0 : $(id);
+    if (target === null) return;
+    e.preventDefault();
+    lenis.scrollTo(target, { offset: 0, duration: 1.4 });
+  })
+);
+
+/* ---------------- Split hero letters ---------------- */
+$$('.split').forEach((el) => {
+  el.innerHTML = [...el.textContent].map((c) => `<span class="ch">${c}</span>`).join('');
+});
+
+/* ---------------- 3D stage ---------------- */
+const loaderCount = $('#loaderCount');
+const loaderBar = $('#loaderBar');
+let shownPct = 0;
+const setPct = (p) => {
+  shownPct = Math.max(shownPct, p);
+  loaderCount.textContent = String(Math.round(shownPct * 100)).padStart(3, '0');
+  loaderBar.style.width = `${shownPct * 100}%`;
+};
+
+const stage = createStage($('#stage'), { onProgress: (p) => setPct(p * 0.95) });
+const S = stage.state;
+// Start state: shoe dropped out of frame so the intro can fly it in.
+Object.assign(S, { y: -4, ry: -2.2, rx: 0.6, scale: 0.7 });
+
+stage.ready
+  .catch((err) => console.error('Model failed to load', err))
+  .finally(() => {
+    setPct(1);
+    setTimeout(intro, 350);
+  });
+
+/* ---------------- Intro ---------------- */
+function intro() {
+  $('#loader').classList.add('is-done');
+  document.body.classList.remove('is-loading');
+  lenis.start();
+  const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
+  tl.from('.hero__word .ch', { yPercent: 110, duration: 1.4, stagger: 0.05 }, 0.2)
+    .from('.reveal', { y: 30, opacity: 0, duration: 1.2, stagger: 0.08 }, 0.7)
+    .from('.nav', { yPercent: -100, duration: 1 }, 0.6);
+  setupScroll();
+}
+
+/* ---------------- Scroll choreography ---------------- */
+function setupScroll() {
+  const mm = gsap.matchMedia();
+
+  mm.add({ desktop: '(min-width: 901px)', mobile: '(max-width: 900px)' }, (ctx) => {
+    const { desktop } = ctx.conditions;
+    // Shoe poses per section. x/y in world units; rotations in radians.
+    const P = desktop
+      ? {
+          hero: { x: 0, y: -0.25, z: 0, scale: 1.1, rx: 0.28, ry: -0.55, rz: 0.1, float: 1, opacity: 1 },
+          side: { x: 1.25, y: 0, z: 0, scale: 1.2, rx: 0.08, ry: 0, rz: 0, float: 0.4 },
+          top: { x: 1.25, y: 0, z: 0, scale: 1.1, rx: 1.15, ry: 0.15, rz: 0, float: 0.3 },
+          sole: { x: 1.25, y: 0, z: 0, scale: 1.15, rx: -1.35, ry: -0.2, rz: 0, float: 0.3 },
+          lab: { x: -1.5, y: -0.05, z: 0, scale: 1.05, rx: 0.3, ry: -0.7, rz: 0.05, float: 0.6 },
+          exit: { x: -1.5, y: 3.4, z: 0, scale: 0.9, rx: 0.6, ry: 0.4, opacity: 0 },
+        }
+      : {
+          hero: { x: 0, y: -0.1, z: 0, scale: 0.92, rx: 0.3, ry: -0.6, rz: 0.12, float: 1, opacity: 1 },
+          side: { x: 0, y: 0.8, z: 0, scale: 0.78, rx: 0.08, ry: 0, rz: 0, float: 0.4 },
+          top: { x: 0, y: 0.8, z: 0, scale: 0.74, rx: 1.15, ry: 0.15, rz: 0, float: 0.3 },
+          sole: { x: 0, y: 0.8, z: 0, scale: 0.74, rx: -1.35, ry: -0.2, rz: 0, float: 0.3 },
+          lab: { x: 0, y: 0.95, z: 0, scale: 0.9, rx: 0.3, ry: -0.7, rz: 0.05, float: 0.6 },
+          exit: { x: 0, y: 5.5, z: 0, scale: 0.8, rx: 0.6, ry: 0.4, opacity: 0 },
+        };
+
+    // Keyframes: [scroll position, pose], rebuilt on every refresh. The shoe's
+    // pose is interpolated between them, so all sections share one source of truth.
+    let keys = [];
+    const build = () => {
+      const vh = window.innerHeight;
+      const wh = stage.worldHeight(); // world units per viewport height
+      const top = (el) => el.getBoundingClientRect().top + window.scrollY;
+      const anat = $('#anatomy');
+      const lab = $('#lab');
+      const aT = top(anat);
+      const aL = anat.offsetHeight - vh;
+      const lT = top(lab);
+      const lH = lab.offsetHeight;
+      const follow = (pose, px, extra = {}) => ({ ...pose, y: pose.y + (px / vh) * wh, ...extra });
+      keys = [
+        [0, P.hero],
+        [aT - vh * 0.75, P.hero],
+        [aT, P.side],
+        [aT + aL * 0.22, P.side],
+        [aT + aL * 0.42, P.top],
+        [aT + aL * 0.58, P.top],
+        [aT + aL * 0.78, P.sole],
+        [aT + aL, P.sole],
+      ];
+      if (desktop) {
+        keys.push([lT, P.lab], [lT + lH - vh, P.lab], [lT + lH, follow(P.lab, vh, { opacity: 0, ry: P.lab.ry + 0.6 })]);
+      } else {
+        keys.push([lT, P.lab], [lT + vh * 0.45, follow(P.lab, vh * 0.45)], [lT + vh * 0.75, follow(P.lab, vh * 0.75, { opacity: 0 })]);
+      }
+    };
+    const ease = (t) => t * t * (3 - 2 * t);
+    const intro = { t: 0 };
+    const start = { ...S };
+    const apply = () => {
+      if (!keys.length) return;
+      const y = window.scrollY;
+      let pose = keys[keys.length - 1][1];
+      if (y <= keys[0][0]) pose = keys[0][1];
+      else {
+        for (let i = 0; i < keys.length - 1; i++) {
+          const [a, pa] = keys[i];
+          const [b, pb] = keys[i + 1];
+          if (y >= a && y <= b) {
+            const t = b > a ? ease((y - a) / (b - a)) : 1;
+            pose = {};
+            for (const k in pb) pose[k] = (pa[k] ?? pb[k]) + (pb[k] - (pa[k] ?? pb[k])) * t;
+            break;
+          }
+        }
+      }
+      const it = intro.t;
+      for (const k in pose) {
+        const full = { opacity: 1, float: 1, ...pose }[k];
+        S[k] = it >= 1 ? full : (start[k] ?? full) + (full - (start[k] ?? full)) * it;
+      }
+    };
+    ScrollTrigger.addEventListener('refresh', () => { build(); apply(); });
+    build();
+    lenis.on('scroll', apply);
+    gsap.to(intro, { t: 1, duration: reduced ? 0 : 2.2, ease: 'expo.out', delay: 0.1, onUpdate: apply });
+
+    gsap.to('.hero__word', { yPercent: -25, opacity: 0.2, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+    ScrollTrigger.create({
+      trigger: '#anatomy', start: 'top top', end: 'bottom bottom',
+      onUpdate: (self) => {
+        setStep(Math.min(2, Math.floor(self.progress * 3)));
+        $('#anatBar').style.width = `${self.progress * 100}%`;
+      },
+    });
+
+    // Lenis listener cleanup when the media query flips.
+    return () => lenis.off('scroll', apply);
+  });
+
+  gsap.matchMedia().add({ desktop: '(min-width: 901px)', mobile: '(max-width: 900px)' }, (ctx) => {
+    const { desktop } = ctx.conditions;
+    ScrollTrigger.create({
+      trigger: '#lab', start: 'top 40%', end: 'bottom 60%',
+      onToggle: (self) => stage.setDragEnabled(self.isActive),
+    });
+
+    // Vault: horizontal scroll on desktop.
+    if (desktop) {
+      const track = $('#vaultTrack');
+      const dist = () => track.scrollWidth - window.innerWidth;
+      gsap.to(track, {
+        x: () => -dist(), ease: 'none',
+        scrollTrigger: { trigger: '.vault', start: 'top top', end: () => `+=${dist()}`, pin: true, scrub: 0.6, invalidateOnRefresh: true, anticipatePin: 1 },
+      });
+    }
+
+    // Drop image parallax.
+    gsap.fromTo('.drop__img', { y: 60, rotate: -14 }, { y: -60, rotate: -4, ease: 'none', scrollTrigger: { trigger: '.drop', start: 'top bottom', end: 'bottom top', scrub: true } });
+  });
+
+  // Nav hide on scroll down / show on up.
+  ScrollTrigger.create({
+    start: 80, end: 'max',
+    onUpdate: (self) => {
+      $('#nav').classList.toggle('is-hidden', self.direction === 1 && self.scroll() > 400);
+      $('#nav').classList.toggle('is-solid', self.scroll() > 80);
+    },
+  });
+
+  // Marquee driven by time + scroll velocity.
+  const track = $('#marquee1');
+  track.innerHTML += track.innerHTML;
+  let mx = 0;
+  let boost = 0;
+  lenis.on('scroll', ({ velocity }) => { boost = velocity; });
+  gsap.ticker.add(() => {
+    const half = track.scrollWidth / 2;
+    mx -= 1.2 + Math.abs(boost) * 0.4;
+    if (mx <= -half) mx += half;
+    track.style.transform = `translateX(${mx}px)`;
+  });
+
+  // Count-up stats.
+  $$('.stat b').forEach((el) => {
+    const end = +el.dataset.count;
+    const suffix = el.dataset.suffix || '';
+    const o = { v: 0 };
+    ScrollTrigger.create({
+      trigger: el, start: 'top 85%', once: true,
+      onEnter: () => gsap.to(o, { v: end, duration: 1.8, ease: 'power3.out', onUpdate: () => (el.textContent = Math.round(o.v).toLocaleString('en-US') + suffix) }),
+    });
+    el.textContent = '0' + suffix;
+  });
+
+  // Section titles slide up.
+  $$('.vault__title, .drop__title, .footer__title, .lab__title').forEach((el) =>
+    gsap.from(el, { y: 60, opacity: 0, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 88%' } })
+  );
+
+  ScrollTrigger.refresh();
+}
+
+let curStep = 0;
+function setStep(i) {
+  if (i === curStep) return;
+  curStep = i;
+  $$('.step').forEach((el) => el.classList.toggle('is-active', +el.dataset.step === i));
+  $$('.callout').forEach((el) => el.classList.toggle('is-active', +el.dataset.step === i));
+  $('#anatIdx').textContent = String(i + 1).padStart(2, '0');
+}
+// First callouts visible once anatomy is reached.
+ScrollTrigger.create({
+  trigger: '#anatomy', start: 'top 30%', end: 'bottom top',
+  onToggle: (self) => $$('.callout').forEach((el) => el.classList.toggle('is-active', self.isActive && +el.dataset.step === curStep)),
+});
+
+/* ---------------- Colorway lab ---------------- */
+let variant = 'midnight';
+let hue = 0;
+let sat = 1;
+const labName = $('#labName');
+
+function updateLabName() {
+  let label = baseName[variant];
+  if (hue > 4 && hue < 356) {
+    const h = (baseHue[variant] + hue) % 360;
+    for (const [from, n] of hueNames) if (h >= from) label = n;
+    if (label === baseName[variant]) label = `${label} II`;
+  }
+  if (sat < 0.25) label = 'Ghost';
+  else if (sat > 1.6) label = `Neon ${label}`;
+  labName.textContent = `GH-RUNNER "${label}"`.toUpperCase();
+}
+
+$$('.swatch').forEach((btn) =>
+  btn.addEventListener('click', () => {
+    variant = btn.dataset.variant;
+    stage.setVariant(variant);
+    $$('.swatch').forEach((b) => {
+      b.classList.toggle('is-active', b === btn);
+      b.setAttribute('aria-checked', b === btn);
+    });
+    gsap.fromTo(stage.state, { scale: stage.state.scale * 0.92 }, { scale: stage.state.scale, duration: 0.6, ease: 'back.out(3)' });
+    updateLabName();
+  })
+);
+$('#hue').addEventListener('input', (e) => {
+  hue = +e.target.value;
+  stage.uniforms.uHue.value = (hue * Math.PI) / 180;
+  $('#hueOut').textContent = `${hue}°`;
+  updateLabName();
+});
+$('#sat').addEventListener('input', (e) => {
+  sat = +e.target.value / 100;
+  stage.uniforms.uSat.value = sat;
+  $('#satOut').textContent = `${e.target.value}%`;
+  updateLabName();
+});
+
+const sizesEl = $('#sizes');
+let pickedSize = null;
+sizes.slice(0, 14).forEach((s) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'size';
+  b.textContent = s;
+  b.disabled = soldOut.includes(s);
+  b.setAttribute('aria-label', `US ${s}${b.disabled ? ', sold out' : ''}`);
+  b.addEventListener('click', () => {
+    pickedSize = s;
+    $$('.size', sizesEl).forEach((x) => x.classList.toggle('is-active', x === b));
+  });
+  sizesEl.appendChild(b);
+});
+
+let bag = 0;
+function addToBag(label) {
+  bag += 1;
+  const c = $('#bagCount');
+  c.textContent = bag;
+  c.classList.remove('bump');
+  void c.offsetWidth;
+  c.classList.add('bump');
+  toast(label);
+}
+$('#addToBag').addEventListener('click', () => {
+  if (!pickedSize) {
+    toast('Pick a size first');
+    gsap.fromTo('#sizes', { x: -8 }, { x: 0, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
+    return;
+  }
+  addToBag(`Added ${labName.textContent.replace('GH-RUNNER ', '')} · US ${pickedSize}`);
+});
+
+stage.bindDrag($('#labZone'));
+$('#zoomIn').addEventListener('click', () => stage.zoomBy(1.2));
+$('#zoomOut').addEventListener('click', () => stage.zoomBy(1 / 1.2));
+
+/* ---------------- Toast ---------------- */
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('is-on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('is-on'), 2400);
+}
+$('#bagBtn').addEventListener('click', () => toast(bag ? `${bag} pair${bag > 1 ? 's' : ''} in your bag (demo)` : 'Your bag is empty. Go get some heat.'));
+
+/* ---------------- Countdown ---------------- */
+function nextFriday10() {
+  const d = new Date();
+  const out = new Date(d);
+  out.setHours(10, 0, 0, 0);
+  out.setDate(d.getDate() + ((5 - d.getDay() + 7) % 7));
+  if (out <= d) out.setDate(out.getDate() + 7);
+  return out;
+}
+const dropAt = nextFriday10();
+const cdEls = Object.fromEntries($$('#countdown b').map((b) => [b.dataset.unit, b]));
+function tick() {
+  let s = Math.max(0, Math.floor((dropAt - Date.now()) / 1000));
+  const v = { d: Math.floor(s / 86400), h: Math.floor((s % 86400) / 3600), m: Math.floor((s % 3600) / 60), s: s % 60 };
+  for (const k in v) {
+    const str = String(v[k]).padStart(2, '0');
+    if (cdEls[k].textContent !== str) cdEls[k].textContent = str;
+  }
+}
+tick();
+setInterval(tick, 1000);
+
+/* ---------------- Raffle + alerts ---------------- */
+const sel = $('#raffleSize');
+sizes.filter((s) => !soldOut.includes(s)).forEach((s) => sel.insertAdjacentHTML('beforeend', `<option value="${s}">US ${s}</option>`));
+$('#raffle').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = $('#raffleEmail');
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
+  email.classList.toggle('is-invalid', !ok);
+  sel.classList.toggle('is-invalid', !sel.value);
+  if (!ok || !sel.value) return toast(!ok ? 'Enter a valid email' : 'Pick your size');
+  const note = $('#raffleNote');
+  note.textContent = `You're in for US ${sel.value}. Entry #${Math.floor(1000 + Math.random() * 9000)}. Good luck. (Demo: nothing was sent.)`;
+  note.classList.add('is-win');
+  e.target.querySelector('button').textContent = 'Entered';
+  e.target.querySelector('button').disabled = true;
+});
+$('#alerts').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = $('#alertEmail');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) return toast('Enter a valid email');
+  input.value = '';
+  toast("You're on the list. (Demo)");
+});
+
+/* ---------------- Vault cards ---------------- */
+function spark(up) {
+  const pts = [];
+  let y = up ? 18 : 6;
+  for (let i = 0; i < 12; i++) {
+    y += (Math.sin(i * 1.7 + (up ? 0 : 2)) * 3) + (up ? -1.1 : 1.1);
+    pts.push(`${(i / 11) * 70},${Math.max(2, Math.min(22, y)).toFixed(1)}`);
+  }
+  return `<svg class="spark" viewBox="0 0 70 24" aria-hidden="true"><polyline points="${pts.join(' ')}" fill="none" stroke="${up ? '#12a150' : '#d93a12'}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+const vt = $('#vaultTrack');
+products.forEach((p, i) => {
+  const up = p.chg >= 0;
+  vt.insertAdjacentHTML(
+    'beforeend',
+    `<a class="card" href="#lab" data-variant="${p.variant}" data-hue="${p.hue}" data-sat="${p.sat}" style="--c:${p.bg}">
+      <div class="card__media">
+        <div class="card__tags">${p.tags.map((t, j) => `<span class="tag ${j ? 'tag--line' : 'tag--volt'}">${t}</span>`).join('')}</div>
+        <span class="card__num">${String(i + 1).padStart(2, '0')}</span>
+        <img class="a" src="shots/${p.id}-a.png" alt="${p.name} ${p.cw}" loading="lazy" width="800" height="560" />
+        <img class="b" src="shots/${p.id}-b.png" alt="" loading="lazy" width="800" height="560" />
+      </div>
+      <div class="card__body">
+        <h3 class="card__name">${p.name}</h3>
+        <p class="card__cw">${p.cw}</p>
+        <div class="card__row">
+          <div><span class="card__price">$${p.price}</span> <span class="card__chg ${up ? 'up' : 'down'}">${up ? '&#9650;' : '&#9660;'} ${Math.abs(p.chg).toFixed(1)}%</span></div>
+          ${spark(up)}
+        </div>
+      </div>
+    </a>`
+  );
+});
+vt.insertAdjacentHTML('beforeend', `<div class="card card--end"><div><h3>Can't find<br/>your grail?</h3><a class="btn btn--volt" href="#lab">Build it in the lab</a></div></div>`);
+
+// Clicking a vault card loads its colorway into the lab.
+$$('.card[data-variant]').forEach((card) =>
+  card.addEventListener('click', (e) => {
+    e.preventDefault();
+    const btn = $(`.swatch[data-variant="${card.dataset.variant}"]`);
+    btn.click();
+    const h = $('#hue');
+    const s = $('#sat');
+    h.value = card.dataset.hue;
+    s.value = Math.round(card.dataset.sat * 100);
+    h.dispatchEvent(new Event('input'));
+    s.dispatchEvent(new Event('input'));
+    lenis.scrollTo('#lab', { duration: 1.6 });
+  })
+);
+$$('.card--end a').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); lenis.scrollTo('#lab', { duration: 1.6 }); }));
+
+// Card tilt on hover (desktop).
+if (!isTouch) {
+  $$('.card').forEach((card) => {
+    card.addEventListener('pointermove', (e) => {
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = `perspective(900px) rotateY(${px * 10}deg) rotateX(${-py * 10}deg) translateY(-6px)`;
+    });
+    card.addEventListener('pointerleave', () => (card.style.transform = ''));
+  });
+}
+
+/* ---------------- Cursor + magnetic buttons ---------------- */
+if (!isTouch) {
+  const cur = $('#cursor');
+  const label = $('#cursorLabel');
+  const pos = { x: innerWidth / 2, y: innerHeight / 2 };
+  const xTo = gsap.quickTo(cur, 'x', { duration: 0.25, ease: 'power3' });
+  const yTo = gsap.quickTo(cur, 'y', { duration: 0.25, ease: 'power3' });
+  window.addEventListener('pointermove', (e) => { cur.classList.add('is-on'); pos.x = e.clientX; pos.y = e.clientY; xTo(pos.x); yTo(pos.y); });
+  const big = (text) => { cur.classList.add('is-big'); label.textContent = text; };
+  const small = () => cur.classList.remove('is-big');
+  $('#labZone').addEventListener('pointerenter', () => big('DRAG'));
+  $('#labZone').addEventListener('pointerleave', small);
+  $$('.card[data-variant]').forEach((c) => { c.addEventListener('pointerenter', () => big('REMIX')); c.addEventListener('pointerleave', small); });
+
+  $$('.magnetic').forEach((el) => {
+    el.addEventListener('pointermove', (e) => {
+      const r = el.getBoundingClientRect();
+      gsap.to(el, { x: (e.clientX - r.left - r.width / 2) * 0.3, y: (e.clientY - r.top - r.height / 2) * 0.4, duration: 0.4, ease: 'power3' });
+    });
+    el.addEventListener('pointerleave', () => gsap.to(el, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.4)' }));
+  });
+}
+
+window.addEventListener('load', () => ScrollTrigger.refresh());

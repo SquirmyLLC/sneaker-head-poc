@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}canvas{display:block;width:100vw;height:100vh}</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+import { createStage } from '/src/stage.js';
+const stage = createStage(document.getElementById('c'), { modelUrl: '/models/shoe.json' });
+window.renderShot = async ({ variant, hue, sat, pose }) => {
+  await stage.ready;
+  stage.setVariant(variant);
+  stage.uniforms.uHue.value = hue * Math.PI / 180;
+  stage.uniforms.uSat.value = sat;
+  Object.assign(stage.state, { x: 0, y: 0.1, z: 0, scale: 1.7, float: 0, opacity: 1, shadow: 1, rz: 0 }, pose);
+  stage.snap();
+  await new Promise(r => setTimeout(r, 400));
+};
+window.stageReady = stage.ready.then(() => true);
+</script></body></html>
