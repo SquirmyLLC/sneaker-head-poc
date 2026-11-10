@@ -40,43 +40,67 @@
     </header>
 
     <main id="top">
-      <!-- HERO -->
+      <!-- HERO: scroll- and drag-scrubbed video reel -->
       <section class="hero" id="hero">
-        <h1 class="hero__word" aria-label="HEAT XCHANGE">
-          <span class="hero__line"><span class="split">HEAT</span></span>
-          <span class="hero__line hero__line--outline"><span class="split">XCHANGE</span></span>
-        </h1>
+        <div class="hero__pin">
+          <h1 class="hero__word" aria-label="HEAT XCHANGE">
+            <span class="hero__line hero__line--a"><span class="split">HEAT</span></span>
+            <span class="hero__line hero__line--b hero__line--outline"><span class="split">XCHANGE</span></span>
+          </h1>
 
-        <img src="shots/midnight-0-a.png" alt="" class="fallback fallback--hero" aria-hidden="true" />
-
-        <div class="hero__meta hero__meta--tl reveal">
-          <span class="tag tag--volt">Drop 027</span>
-          <span class="mono">HX-RUNNER "WAVE"</span>
-        </div>
-        <div class="hero__meta hero__meta--tr reveal mono">
-          <span>Retail <b>$220</b></span>
-          <span>Resale <b class="up">$540 &uarr;</b></span>
-          <span>Pairs <b>300</b></span>
-        </div>
-
-        <div class="hero__bottom">
-          <p class="hero__lede reveal">Buy. Sell. Trade.<br />Heat only.<span>Every pair authenticated in-house. Cash or trade credit in 48 hours.</span></p>
-          <div class="hero__ctas reveal">
-            <a href="#vault" class="btn btn--volt magnetic">Shop heat</a>
-            <a href="#trade" class="btn btn--ghost magnetic">Sell or trade</a>
+          <div class="reel-wrap">
+            <div class="reel" id="reel" aria-label="Spinning sneaker video. Drag sideways or scroll to spin it.">
+              <canvas id="reelCanvas"></canvas>
+              <img class="reel__poster" src="video/hero-poster.jpg" alt="" aria-hidden="true" />
+              <div class="reel__spot" aria-hidden="true"></div>
+              <div class="reel__hud mono" aria-hidden="true">
+                <span class="reel__rec"><i></i><b id="reelMode">LIVE</b></span>
+                <span id="reelFrame">000 / 159</span>
+              </div>
+              <div class="reel__bar" aria-hidden="true"><span id="reelBar"></span></div>
+              <div class="reel__hint mono" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Drag to spin
+              </div>
+            </div>
+            <div class="chips" aria-hidden="true">
+              <div class="chip chip--l" data-from="0" data-to="24"><span class="chip__dot"></span><div><b>Tumbled leather</b><small>Premium full-grain upper</small></div></div>
+              <div class="chip chip--r" data-from="26" data-to="66"><span class="chip__dot"></span><div><b>Pivot outsole</b><small>OG traction pattern</small></div></div>
+              <div class="chip chip--l" data-from="68" data-to="108"><span class="chip__dot"></span><div><b>OG colorway</b><small>Last sale $1,240 &uarr;</small></div></div>
+              <div class="chip chip--r" data-from="110" data-to="159"><span class="chip__dot"></span><div><b>Padded collar</b><small>Authenticated &check;</small></div></div>
+            </div>
           </div>
-        </div>
 
-        <div class="badge reveal" aria-hidden="true">
-          <svg viewBox="0 0 120 120">
-            <defs><path id="circ" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0" /></defs>
-            <text><textPath href="#circ">BUY &#183; SELL &#183; TRADE &#183; 100% AUTHENTIC &#183;</textPath></text>
-          </svg>
-          <span class="badge__check">
-            <svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </span>
+          <div class="hero__meta hero__meta--tl reveal">
+            <span class="tag tag--volt">Just landed</span>
+            <span class="mono">High-top grail &middot; Size 10</span>
+          </div>
+          <div class="hero__meta hero__meta--tr reveal mono">
+            <span>Ask <b>$1,180</b></span>
+            <span>Last sale <b class="up">$1,240 &uarr;</b></span>
+            <span>Offers <b>37</b></span>
+          </div>
+
+          <div class="hero__bottom">
+            <p class="hero__lede reveal">Buy. Sell. Trade.<br />Heat only.<span>Every pair authenticated in-house. Cash or trade credit in 48 hours.</span></p>
+            <div class="hero__ctas reveal">
+              <a href="#vault" class="btn btn--volt magnetic">Shop heat</a>
+              <a href="#trade" class="btn btn--ghost magnetic">Sell or trade</a>
+            </div>
+          </div>
+
+          <div class="badge reveal" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <defs><path id="circ" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0" /></defs>
+              <text><textPath href="#circ">BUY &#183; SELL &#183; TRADE &#183; 100% AUTHENTIC &#183;</textPath></text>
+            </svg>
+            <span class="badge__check">
+              <svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+          <div class="hero__progress" aria-hidden="true"><span id="heroProg"></span></div>
+          <div class="scroll-cue mono" aria-hidden="true"><span></span>Scroll to spin</div>
         </div>
-        <div class="scroll-cue mono" aria-hidden="true"><span></span>Scroll</div>
       </section>
 
       <!-- MARQUEE -->

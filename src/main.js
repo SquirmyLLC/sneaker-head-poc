@@ -100,7 +100,7 @@ function setupScroll() {
     // Shoe poses per section. x/y in world units; rotations in radians.
     const P = desktop
       ? {
-          hero: { x: 0, y: -0.25, z: 0, scale: 1.1, rx: 0.28, ry: -0.55, rz: 0.1, float: 1, opacity: 1 },
+          hero: { x: 1.25, y: -1.2, z: 0, scale: 1.0, rx: 0.08, ry: -0.6, rz: 0, float: 0.4, opacity: 0 },
           side: { x: 1.25, y: 0, z: 0, scale: 1.2, rx: 0.08, ry: 0, rz: 0, float: 0.4 },
           top: { x: 1.25, y: 0, z: 0, scale: 1.1, rx: 1.15, ry: 0.15, rz: 0, float: 0.3 },
           sole: { x: 1.25, y: 0, z: 0, scale: 1.15, rx: -1.35, ry: -0.2, rz: 0, float: 0.3 },
@@ -108,7 +108,7 @@ function setupScroll() {
           exit: { x: -1.5, y: 3.4, z: 0, scale: 0.9, rx: 0.6, ry: 0.4, opacity: 0 },
         }
       : {
-          hero: { x: 0, y: -0.1, z: 0, scale: 0.92, rx: 0.3, ry: -0.6, rz: 0.12, float: 1, opacity: 1 },
+          hero: { x: 0, y: -0.6, z: 0, scale: 0.78, rx: 0.08, ry: -0.6, rz: 0, float: 0.4, opacity: 0 },
           side: { x: 0, y: 0.8, z: 0, scale: 0.78, rx: 0.08, ry: 0, rz: 0, float: 0.4 },
           top: { x: 0, y: 0.8, z: 0, scale: 0.74, rx: 1.15, ry: 0.15, rz: 0, float: 0.3 },
           sole: { x: 0, y: 0.8, z: 0, scale: 0.74, rx: -1.35, ry: -0.2, rz: 0, float: 0.3 },
@@ -132,7 +132,7 @@ function setupScroll() {
       const follow = (pose, px, extra = {}) => ({ ...pose, y: pose.y + (px / vh) * wh, ...extra });
       keys = [
         [0, P.hero],
-        [aT - vh * 0.75, P.hero],
+        [aT - vh * 0.6, P.hero],
         [aT, P.side],
         [aT + aL * 0.22, P.side],
         [aT + aL * 0.42, P.top],
@@ -143,6 +143,8 @@ function setupScroll() {
       // After the anatomy tour the 3D shoe floats away; the lab uses its own 360° viewer.
       const out = aT + aL;
       keys.push([out + vh * 0.7, follow(P.sole, vh * 0.7, { opacity: 0, ry: P.sole.ry + 0.8 })]);
+      // Every pose sets every property, so nothing sticks from a previous pose.
+      keys = keys.map(([at, pose]) => [at, { opacity: 1, float: 1, shadow: 1, z: 0, ...pose }]);
     };
     const ease = (t) => t * t * (3 - 2 * t);
     const intro = { t: 0 };
@@ -175,7 +177,12 @@ function setupScroll() {
     lenis.on('scroll', apply);
     gsap.to(intro, { t: 1, duration: reduced ? 0 : 2.2, ease: 'expo.out', delay: 0.1, onUpdate: apply });
 
-    gsap.to('.hero__word', { yPercent: -25, opacity: 0.2, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+    // Hero: the two words split apart while the reel grows, all scrubbed by scroll.
+    const ht = gsap.timeline({ scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom bottom', scrub: 0.6 } });
+    ht.to('.hero__line--a', { xPercent: desktop ? -38 : -12, ease: 'none' }, 0)
+      .to('.hero__line--b', { xPercent: desktop ? 22 : 12, ease: 'none' }, 0)
+      .fromTo('.reel-wrap', { scale: 1 }, { scale: desktop ? 1.08 : 1.04, ease: 'none' }, 0)
+      .to('.hero__word', { opacity: 0.35, ease: 'none' }, 0.6);
     ScrollTrigger.create({
       trigger: '#anatomy', start: 'top top', end: 'bottom bottom',
       onUpdate: (self) => {
@@ -262,6 +269,97 @@ ScrollTrigger.create({
   trigger: '#anatomy', start: 'top 30%', end: 'bottom top',
   onToggle: (self) => $$('.callout').forEach((el) => el.classList.toggle('is-active', self.isActive && +el.dataset.step === curStep)),
 });
+
+/* ---------------- Hero reel: scroll + drag scrubbed video frames ---------------- */
+{
+  const N = 159;
+  const canvas = $('#reelCanvas');
+  const ctx = canvas.getContext('2d');
+  const reel = $('#reel');
+  const frames = [];
+  let loaded = 0;
+  for (let i = 0; i < N; i++) {
+    const im = new Image();
+    im.decoding = 'async';
+    im.onload = () => { loaded++; if (i === 0) reel.classList.add('is-ready'); };
+    im.src = `video/frames/f${String(i + 1).padStart(3, '0')}.webp`;
+    frames.push(im);
+  }
+  const r = { cur: 0, auto: 0, offset: 0, vel: 0, dragging: false, lastX: 0, scrollP: 0, lastDrawn: -1, w: 0, h: 0 };
+  function size() {
+    const b = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    r.w = canvas.width = Math.round(b.width * dpr);
+    r.h = canvas.height = Math.round(b.height * dpr);
+    r.lastDrawn = -1;
+  }
+  new ResizeObserver(size).observe(canvas);
+  function draw(i) {
+    let im = frames[i];
+    if (!im.complete || !im.naturalWidth) {
+      // nearest loaded frame
+      for (let d = 1; d < N && (!im.complete || !im.naturalWidth); d++) im = frames[(i - d + N) % N];
+      if (!im.complete || !im.naturalWidth) return;
+    }
+    if (i === r.lastDrawn) return;
+    r.lastDrawn = i;
+    const s2 = Math.max(r.w / im.naturalWidth, r.h / im.naturalHeight);
+    const dw = im.naturalWidth * s2, dh = im.naturalHeight * s2;
+    ctx.drawImage(im, (r.w - dw) / 2, (r.h - dh) / 2, dw, dh);
+  }
+  ScrollTrigger.create({
+    trigger: '.hero', start: 'top top', end: 'bottom bottom',
+    onUpdate: (self) => { r.scrollP = self.progress; $('#heroProg').style.transform = `scaleX(${self.progress})`; },
+  });
+  // Drag to spin, with inertia.
+  reel.addEventListener('pointerdown', (e) => {
+    r.dragging = true; r.lastX = e.clientX; r.vel = 0;
+    reel.setPointerCapture(e.pointerId); reel.classList.add('is-dragging');
+  });
+  reel.addEventListener('pointermove', (e) => {
+    const b = reel.getBoundingClientRect();
+    reel.style.setProperty('--mx', `${((e.clientX - b.left) / b.width) * 100}%`);
+    reel.style.setProperty('--my', `${((e.clientY - b.top) / b.height) * 100}%`);
+    if (!isTouch) {
+      const px = (e.clientX - b.left) / b.width - 0.5;
+      const py = (e.clientY - b.top) / b.height - 0.5;
+      gsap.to(reel, { rotateY: px * 10, rotateX: -py * 8, duration: 0.6, ease: 'power3' });
+    }
+    if (!r.dragging) return;
+    const dx = e.clientX - r.lastX;
+    r.lastX = e.clientX;
+    r.vel = dx * 0.35;
+    r.offset += r.vel;
+  });
+  const end = () => { r.dragging = false; reel.classList.remove('is-dragging'); };
+  reel.addEventListener('pointerup', end);
+  reel.addEventListener('pointercancel', end);
+  reel.addEventListener('pointerleave', () => gsap.to(reel, { rotateY: 0, rotateX: 0, duration: 0.9, ease: 'elastic.out(1, 0.5)' }));
+  const chips = $$('.chip');
+  let lastChip = -1;
+  gsap.ticker.add((t, dt) => {
+    if (!r.dragging) {
+      r.vel *= 0.93;
+      r.offset += r.vel;
+    }
+    // Plays on its own at the top; once scrolling starts, scroll drives it.
+    const scrolling = r.scrollP > 0.002;
+    if (!scrolling && !r.dragging && Math.abs(r.vel) < 0.2) r.auto += dt * 0.015;
+    const base = scrolling ? r.auto + r.scrollP * (N - 1) * 1.6 : r.auto;
+    const target = base + r.offset;
+    r.cur += (target - r.cur) * 0.18;
+    const i = ((Math.round(r.cur) % N) + N) % N;
+    draw(i);
+    $('#reelFrame').textContent = `${String(i + 1).padStart(3, '0')} / ${N}`;
+    $('#reelBar').style.transform = `scaleX(${(i + 1) / N})`;
+    $('#reelMode').textContent = r.dragging || Math.abs(r.vel) > 0.5 ? 'SPIN' : scrolling ? 'SCRUB' : 'LIVE';
+    const ci = chips.findIndex((c) => i >= +c.dataset.from && i <= +c.dataset.to);
+    if (ci !== lastChip) {
+      lastChip = ci;
+      chips.forEach((c, k) => c.classList.toggle('is-on', k === ci));
+    }
+  });
+}
 
 /* ---------------- Colorway lab ---------------- */
 let variant = 'midnight';
